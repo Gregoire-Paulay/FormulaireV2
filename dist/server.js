@@ -18,6 +18,7 @@ const cors = require("cors");
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); // permet de manipuler les paramètre de type body
 app.use(cors());
+const zod_1 = require("zod");
 // Import des packages nécéssaire pour utiliser mailgun
 const formData = require("form-data");
 const Mailgun = require("mailgun.js");
@@ -26,6 +27,12 @@ const mailgun = new Mailgun(formData);
 const client = mailgun.client({
     username: "Grégoire Paulay",
     key: process.env.MAILGUN_API_KEY,
+});
+const dataSchema = zod_1.z.object({
+    name: zod_1.z.string(),
+    email: zod_1.z.string(),
+    sujet: zod_1.z.string(),
+    message: zod_1.z.string(),
 });
 app.get("/", (req, res) => {
     try {
@@ -37,9 +44,11 @@ app.get("/", (req, res) => {
 });
 app.post("/form", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("Log Body", req.body);
+        // console.log("Log Body", req.body);
         const { name, email, sujet, message } = req.body;
-        if (name && email && sujet && message) {
+        const data = dataSchema.parse(req.body);
+        // console.log(data);
+        if (data) {
             const messageData = {
                 from: `${name} <${email}>`,
                 to: process.env.MAIL,
